@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>View Location</title>
+<title>View Live Location</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -16,10 +16,13 @@
 <script>
 
 const firebaseConfig = {
-  apiKey: "PASTE HERE",
-  authDomain: "PASTE HERE",
-  databaseURL: "PASTE HERE",
-  projectId: "PASTE HERE",
+  apiKey: "AIzaSyAiC_oz0Qm99P1K9DcRFQb4eY5GHRujW_c",
+  authDomain: "yourlocation-tracker.firebaseapp.com",
+  databaseURL: "https://yourlocation-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "yourlocation-tracker",
+  storageBucket: "yourlocation-tracker.firebasestorage.app",
+  messagingSenderId: "64952347835",
+  appId: "1:64952347835:web:4f48ef82c9b10f0f7c0d9e"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -28,8 +31,10 @@ firebase.database().ref("location").on("value", function(snapshot){
 
 let data = snapshot.val();
 
+if(data){
 document.getElementById("map").src =
 "https://maps.google.com/maps?q="+data.lat+","+data.lon+"&z=15&output=embed";
+}
 
 });
 
