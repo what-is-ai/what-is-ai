@@ -17,9 +17,8 @@ font-family:Arial;
 }
 
 #topbar{
-padding:15px;
+padding:10px;
 background:#111;
-font-size:20px;
 }
 
 select{
@@ -34,7 +33,6 @@ height:90vh;
 
 #mapBox{
 width:50%;
-height:100%;
 }
 
 #mapFrame{
@@ -58,9 +56,9 @@ background:#111;
 .camBox{
 width:100%;
 height:50%;
-object-fit:cover;
 background:black;
 border:1px solid white;
+object-fit:cover;
 }
 
 </style>
@@ -78,9 +76,7 @@ Device:
 <div id="main">
 
 <div id="mapBox">
-
 <iframe id="mapFrame"></iframe>
-
 </div>
 
 <div id="cameraBox">
@@ -107,14 +103,11 @@ firebase.initializeApp(firebaseConfig);
 
 let deviceList=document.getElementById("deviceList");
 
-let mapFrame=document.getElementById("mapFrame");
-
-let frontCam=document.getElementById("frontCam");
-
-let backCam=document.getElementById("backCam");
+let lastLat=null;
+let lastLon=null;
 
 
-// LOAD DEVICE LIST
+// LOAD DEVICES
 firebase.database().ref("devices").on("value",snap=>{
 
 deviceList.innerHTML="";
@@ -124,7 +117,6 @@ snap.forEach(child=>{
 let option=document.createElement("option");
 
 option.value=child.key;
-
 option.text=child.key;
 
 deviceList.appendChild(option);
@@ -136,7 +128,6 @@ loadDevice();
 });
 
 
-// SWITCH DEVICE
 deviceList.onchange=loadDevice;
 
 
@@ -147,54 +138,60 @@ let id=deviceList.value;
 if(!id) return;
 
 
-// LOCATION
+// LOCATION FIX (no blink)
 firebase.database().ref("devices/"+id+"/location")
 .on("value",snap=>{
 
-let data=snap.val();
+let d=snap.val();
 
-if(data){
+if(!d) return;
 
-mapFrame.src=
-"https://maps.google.com/maps?q="
-+data.lat+","+data.lon+"&output=embed";
+if(d.lat!==lastLat || d.lon!==lastLon){
+
+lastLat=d.lat;
+lastLon=d.lon;
+
+document.getElementById("mapFrame").src=
+"https://maps.google.com/maps?q="+
+d.lat+","+d.lon+"&output=embed";
 
 }
 
 });
 
 
-// FRONT CAMERA
+// FRONT CAMERA FIX
 firebase.database().ref("devices/"+id+"/camera/front")
 .on("value",snap=>{
 
-let data=snap.val();
+let d=snap.val();
 
-if(data){
+if(d){
 
-frontCam.src=data.img;
+document.getElementById("frontCam").src=
+d.img+"&t="+new Date().getTime();
 
 }
 
 });
 
 
-// BACK CAMERA
+// BACK CAMERA FIX
 firebase.database().ref("devices/"+id+"/camera/back")
 .on("value",snap=>{
 
-let data=snap.val();
+let d=snap.val();
 
-if(data){
+if(d){
 
-backCam.src=data.img;
+document.getElementById("backCam").src=
+d.img+"&t="+new Date().getTime();
 
 }
 
 });
 
 }
-
 
 </script>
 
