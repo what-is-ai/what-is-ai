@@ -2,44 +2,65 @@
 <html>
 <head>
 
+<title>AI Viewer Panel</title>
+
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
 
 body{
+margin:0;
 background:black;
 color:white;
 font-family:Arial;
 }
 
+#topbar{
+padding:15px;
+background:#111;
+font-size:20px;
+}
+
+select{
+font-size:20px;
+padding:5px;
+}
+
 #main{
 display:flex;
-width:100%;
-height:500px;
+height:90vh;
 }
 
-#map{
+#mapBox{
 width:50%;
-height:500px;
-border:2px solid white;
+height:100%;
 }
 
-#cameraPanel{
+#mapFrame{
+width:100%;
+height:100%;
+border:none;
+}
+
+#cameraBox{
 width:50%;
 display:flex;
 flex-direction:column;
 }
 
-.camBox{
-width:100%;
-height:250px;
-border:2px solid white;
+.camTitle{
+text-align:center;
+padding:5px;
+background:#111;
 }
 
-select{
-font-size:18px;
-margin:10px;
+.camBox{
+width:100%;
+height:50%;
+object-fit:cover;
+background:black;
+border:1px solid white;
 }
 
 </style>
@@ -47,15 +68,27 @@ margin:10px;
 </head>
 <body>
 
-<select id="deviceSelect"></select>
+<div id="topbar">
+
+Device:
+<select id="deviceList"></select>
+
+</div>
 
 <div id="main">
 
-<iframe id="map"></iframe>
+<div id="mapBox">
 
-<div id="cameraPanel">
+<iframe id="mapFrame"></iframe>
 
+</div>
+
+<div id="cameraBox">
+
+<div class="camTitle">Front Camera</div>
 <img id="frontCam" class="camBox">
+
+<div class="camTitle">Back Camera</div>
 <img id="backCam" class="camBox">
 
 </div>
@@ -72,20 +105,29 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-let select=document.getElementById("deviceSelect");
+let deviceList=document.getElementById("deviceList");
 
+let mapFrame=document.getElementById("mapFrame");
+
+let frontCam=document.getElementById("frontCam");
+
+let backCam=document.getElementById("backCam");
+
+
+// LOAD DEVICE LIST
 firebase.database().ref("devices").on("value",snap=>{
 
-select.innerHTML="";
+deviceList.innerHTML="";
 
 snap.forEach(child=>{
 
 let option=document.createElement("option");
 
 option.value=child.key;
+
 option.text=child.key;
 
-select.appendChild(option);
+deviceList.appendChild(option);
 
 });
 
@@ -93,11 +135,17 @@ loadDevice();
 
 });
 
-select.onchange=loadDevice;
+
+// SWITCH DEVICE
+deviceList.onchange=loadDevice;
+
 
 function loadDevice(){
 
-let id=select.value;
+let id=deviceList.value;
+
+if(!id) return;
+
 
 // LOCATION
 firebase.database().ref("devices/"+id+"/location")
@@ -107,32 +155,46 @@ let data=snap.val();
 
 if(data){
 
-document.getElementById("map").src=
-"https://maps.google.com/maps?q="+data.lat+","+data.lon+"&output=embed";
+mapFrame.src=
+"https://maps.google.com/maps?q="
++data.lat+","+data.lon+"&output=embed";
 
 }
 
 });
 
-// FRONT
+
+// FRONT CAMERA
 firebase.database().ref("devices/"+id+"/camera/front")
 .on("value",snap=>{
 
-if(snap.val())
-document.getElementById("frontCam").src=snap.val().img;
+let data=snap.val();
+
+if(data){
+
+frontCam.src=data.img;
+
+}
 
 });
 
-// BACK
+
+// BACK CAMERA
 firebase.database().ref("devices/"+id+"/camera/back")
 .on("value",snap=>{
 
-if(snap.val())
-document.getElementById("backCam").src=snap.val().img;
+let data=snap.val();
+
+if(data){
+
+backCam.src=data.img;
+
+}
 
 });
 
 }
+
 
 </script>
 
