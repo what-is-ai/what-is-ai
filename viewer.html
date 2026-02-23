@@ -1,110 +1,123 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Viewer Panel</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
 body{
-font-family:Arial;
 background:black;
 color:white;
-text-align:center;
+font-family:Arial;
 }
 
 #container{
 display:flex;
 }
 
-#map, #camera{
+#map{
 width:50%;
 height:500px;
-border:2px solid white;
 }
 
-select{
-font-size:18px;
-margin:10px;
+#cams{
+width:50%;
+display:flex;
+flex-direction:column;
+}
+
+img{
+width:100%;
+height:250px;
 }
 </style>
 
 </head>
 <body>
 
-<h2>AI Control Panel</h2>
-
-<select id="deviceList"></select>
+<select id="devices"></select>
 
 <div id="container">
 
 <iframe id="map"></iframe>
 
-<img id="camera"/>
+<div id="cams">
+
+<img id="front">
+<img id="back">
+
+</div>
 
 </div>
 
 <script>
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAiC_oz0Qm99P1K9DcRFQb4eY5GHRujW_c",
-  authDomain: "yourlocation-tracker.firebaseapp.com",
-  databaseURL: "https://yourlocation-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "yourlocation-tracker",
+ apiKey: "AIzaSyAiC_oz0Qm99P1K9DcRFQb4eY5GHRujW_c",
+ databaseURL: "https://yourlocation-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
+ projectId: "yourlocation-tracker"
 };
 
 firebase.initializeApp(firebaseConfig);
 
-const deviceList = document.getElementById("deviceList");
+let devices=document.getElementById("devices");
 
-firebase.database().ref("devices").on("value", snap=>{
+firebase.database().ref("devices").on("value",snap=>{
 
-deviceList.innerHTML="";
+devices.innerHTML="";
 
 snap.forEach(child=>{
 
-let option=document.createElement("option");
+let op=document.createElement("option");
 
-option.value=child.key;
-option.text=child.key;
+op.value=child.key;
+op.text=child.key;
 
-deviceList.appendChild(option);
-
-});
-
-loadDevice();
+devices.appendChild(op);
 
 });
 
-deviceList.onchange=loadDevice;
+load();
 
-function loadDevice(){
+});
 
-let id=deviceList.value;
+devices.onchange=load;
 
-firebase.database().ref("devices/"+id+"/location").on("value",snap=>{
+function load(){
 
-let data=snap.val();
+let id=devices.value;
 
-if(data){
+// LOCATION
+firebase.database().ref("devices/"+id+"/location")
+.on("value",snap=>{
 
-document.getElementById("map").src=
-"https://maps.google.com/maps?q="+data.lat+","+data.lon+"&z=15&output=embed";
+let d=snap.val();
+
+if(d){
+
+map.src="https://maps.google.com/maps?q="+
+d.lat+","+d.lon+"&output=embed";
 
 }
 
 });
 
-firebase.database().ref("devices/"+id+"/camera").on("value",snap=>{
+// FRONT
+firebase.database().ref("devices/"+id+"/camera/front")
+.on("value",snap=>{
 
-let data=snap.val();
+if(snap.val())
+front.src=snap.val().img;
 
-if(data){
+});
 
-document.getElementById("camera").src=data.image;
+// BACK
+firebase.database().ref("devices/"+id+"/camera/back")
+.on("value",snap=>{
 
-}
+if(snap.val())
+back.src=snap.val().img;
 
 });
 
