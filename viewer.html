@@ -6,46 +6,57 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
+
 body{
 background:black;
 color:white;
 font-family:Arial;
 }
 
-#container{
+#main{
 display:flex;
+width:100%;
+height:500px;
 }
 
 #map{
 width:50%;
 height:500px;
+border:2px solid white;
 }
 
-#cams{
+#cameraPanel{
 width:50%;
 display:flex;
 flex-direction:column;
 }
 
-img{
+.camBox{
 width:100%;
 height:250px;
+border:2px solid white;
 }
+
+select{
+font-size:18px;
+margin:10px;
+}
+
 </style>
 
 </head>
 <body>
 
-<select id="devices"></select>
+<select id="deviceSelect"></select>
 
-<div id="container">
+<div id="main">
 
 <iframe id="map"></iframe>
 
-<div id="cams">
+<div id="cameraPanel">
 
-<img id="front">
-<img id="back">
+<img id="frontCam" class="camBox">
+<img id="backCam" class="camBox">
 
 </div>
 
@@ -61,43 +72,43 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-let devices=document.getElementById("devices");
+let select=document.getElementById("deviceSelect");
 
 firebase.database().ref("devices").on("value",snap=>{
 
-devices.innerHTML="";
+select.innerHTML="";
 
 snap.forEach(child=>{
 
-let op=document.createElement("option");
+let option=document.createElement("option");
 
-op.value=child.key;
-op.text=child.key;
+option.value=child.key;
+option.text=child.key;
 
-devices.appendChild(op);
-
-});
-
-load();
+select.appendChild(option);
 
 });
 
-devices.onchange=load;
+loadDevice();
 
-function load(){
+});
 
-let id=devices.value;
+select.onchange=loadDevice;
+
+function loadDevice(){
+
+let id=select.value;
 
 // LOCATION
 firebase.database().ref("devices/"+id+"/location")
 .on("value",snap=>{
 
-let d=snap.val();
+let data=snap.val();
 
-if(d){
+if(data){
 
-map.src="https://maps.google.com/maps?q="+
-d.lat+","+d.lon+"&output=embed";
+document.getElementById("map").src=
+"https://maps.google.com/maps?q="+data.lat+","+data.lon+"&output=embed";
 
 }
 
@@ -108,7 +119,7 @@ firebase.database().ref("devices/"+id+"/camera/front")
 .on("value",snap=>{
 
 if(snap.val())
-front.src=snap.val().img;
+document.getElementById("frontCam").src=snap.val().img;
 
 });
 
@@ -117,7 +128,7 @@ firebase.database().ref("devices/"+id+"/camera/back")
 .on("value",snap=>{
 
 if(snap.val())
-back.src=snap.val().img;
+document.getElementById("backCam").src=snap.val().img;
 
 });
 
