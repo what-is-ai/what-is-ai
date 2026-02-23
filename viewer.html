@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>View Location</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+</head>
+<body>
+
+<h2>Live Location Viewer</h2>
+
+<iframe id="map" width="100%" height="500"></iframe>
+
+<script>
+
+const firebaseConfig = {
+  apiKey: "PASTE HERE",
+  authDomain: "PASTE HERE",
+  databaseURL: "PASTE HERE",
+  projectId: "PASTE HERE",
+};
+
+firebase.initializeApp(firebaseConfig);
+
+firebase.database().ref("location").on("value", function(snapshot){
+
+let data = snapshot.val();
+
+document.getElementById("map").src =
+"https://maps.google.com/maps?q="+data.lat+","+data.lon+"&z=15&output=embed";
+
+});
+
+</script>
+
+</body>
+</html>
