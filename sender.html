@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Sending Location</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+</head>
+<body>
+
+<h2>Sending live location...</h2>
+
+<script>
+
+const firebaseConfig = {
+  apiKey: "PASTE HERE",
+  authDomain: "PASTE HERE",
+  databaseURL: "PASTE HERE",
+  projectId: "PASTE HERE",
+};
+
+firebase.initializeApp(firebaseConfig);
+
+navigator.geolocation.watchPosition(function(pos){
+
+firebase.database().ref("location").set({
+lat: pos.coords.latitude,
+lon: pos.coords.longitude
+});
+
+});
+
+</script>
+
+</body>
+</html>
