@@ -1,17 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>View Live Location</title>
+<title>AI Viewer Panel</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
+<style>
+body{
+font-family:Arial;
+background:black;
+color:white;
+text-align:center;
+}
+
+#container{
+display:flex;
+}
+
+#map, #camera{
+width:50%;
+height:500px;
+border:2px solid white;
+}
+
+select{
+font-size:18px;
+margin:10px;
+}
+</style>
+
 </head>
 <body>
 
-<h2>Live Location Viewer</h2>
+<h2>AI Control Panel</h2>
 
-<iframe id="map" width="100%" height="500"></iframe>
+<select id="deviceList"></select>
+
+<div id="container">
+
+<iframe id="map"></iframe>
+
+<img id="camera"/>
+
+</div>
 
 <script>
 
@@ -20,23 +52,63 @@ const firebaseConfig = {
   authDomain: "yourlocation-tracker.firebaseapp.com",
   databaseURL: "https://yourlocation-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "yourlocation-tracker",
-  storageBucket: "yourlocation-tracker.firebasestorage.app",
-  messagingSenderId: "64952347835",
-  appId: "1:64952347835:web:4f48ef82c9b10f0f7c0d9e"
 };
 
 firebase.initializeApp(firebaseConfig);
 
-firebase.database().ref("location").on("value", function(snapshot){
+const deviceList = document.getElementById("deviceList");
 
-let data = snapshot.val();
+firebase.database().ref("devices").on("value", snap=>{
+
+deviceList.innerHTML="";
+
+snap.forEach(child=>{
+
+let option=document.createElement("option");
+
+option.value=child.key;
+option.text=child.key;
+
+deviceList.appendChild(option);
+
+});
+
+loadDevice();
+
+});
+
+deviceList.onchange=loadDevice;
+
+function loadDevice(){
+
+let id=deviceList.value;
+
+firebase.database().ref("devices/"+id+"/location").on("value",snap=>{
+
+let data=snap.val();
 
 if(data){
-document.getElementById("map").src =
+
+document.getElementById("map").src=
 "https://maps.google.com/maps?q="+data.lat+","+data.lon+"&z=15&output=embed";
+
 }
 
 });
+
+firebase.database().ref("devices/"+id+"/camera").on("value",snap=>{
+
+let data=snap.val();
+
+if(data){
+
+document.getElementById("camera").src=data.image;
+
+}
+
+});
+
+}
 
 </script>
 
