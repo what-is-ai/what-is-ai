@@ -2,7 +2,7 @@
 <html>
 <head>
 
-<title>AI Viewer Panel</title>
+<title>Viewer Control</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -10,55 +10,28 @@
 <style>
 
 body{
-margin:0;
 background:black;
 color:white;
 font-family:Arial;
-}
-
-#topbar{
-padding:10px;
-background:#111;
-}
-
-select{
-font-size:20px;
-padding:5px;
-}
-
-#main{
-display:flex;
-height:90vh;
-}
-
-#mapBox{
-width:50%;
-}
-
-#mapFrame{
-width:100%;
-height:100%;
-border:none;
-}
-
-#cameraBox{
-width:50%;
-display:flex;
-flex-direction:column;
-}
-
-.camTitle{
 text-align:center;
-padding:5px;
-background:#111;
 }
 
-.camBox{
-width:100%;
-height:50%;
-background:black;
-border:1px solid white;
-object-fit:cover;
+button{
+font-size:25px;
+padding:10px 30px;
+margin:10px;
+}
+
+img{
+width:60%;
+border:2px solid white;
+}
+
+iframe{
+width:60%;
+height:300px;
+border:none;
+margin-top:10px;
 }
 
 </style>
@@ -66,30 +39,19 @@ object-fit:cover;
 </head>
 <body>
 
-<div id="topbar">
+<h2>AI Viewer</h2>
 
-Device:
-<select id="deviceList"></select>
+<button onclick="switchCam('user')">FRONT CAMERA</button>
 
-</div>
+<button onclick="switchCam('environment')">BACK CAMERA</button>
 
-<div id="main">
+<br>
 
-<div id="mapBox">
-<iframe id="mapFrame"></iframe>
-</div>
+<img id="cam">
 
-<div id="cameraBox">
+<br>
 
-<div class="camTitle">Front Camera</div>
-<img id="frontCam" class="camBox">
-
-<div class="camTitle">Back Camera</div>
-<img id="backCam" class="camBox">
-
-</div>
-
-</div>
+<iframe id="map"></iframe>
 
 <script>
 
@@ -101,95 +63,55 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-let deviceList=document.getElementById("deviceList");
-
-let lastLat=null;
-let lastLon=null;
+let deviceId=null;
 
 
-// LOAD DEVICES
-firebase.database().ref("devices").on("value",snap=>{
-
-deviceList.innerHTML="";
+// GET DEVICE
+firebase.database().ref("devices").limitToLast(1)
+.on("value",snap=>{
 
 snap.forEach(child=>{
 
-let option=document.createElement("option");
-
-option.value=child.key;
-option.text=child.key;
-
-deviceList.appendChild(option);
-
-});
-
-loadDevice();
-
-});
+deviceId=child.key;
 
 
-deviceList.onchange=loadDevice;
+// CAMERA VIEW
+firebase.database().ref("devices/"+deviceId+"/camera")
+.on("value",s=>{
 
+let d=s.val();
 
-function loadDevice(){
-
-let id=deviceList.value;
-
-if(!id) return;
-
-
-// LOCATION FIX (no blink)
-firebase.database().ref("devices/"+id+"/location")
-.on("value",snap=>{
-
-let d=snap.val();
-
-if(!d) return;
-
-if(d.lat!==lastLat || d.lon!==lastLon){
-
-lastLat=d.lat;
-lastLon=d.lon;
-
-document.getElementById("mapFrame").src=
-"https://maps.google.com/maps?q="+
-d.lat+","+d.lon+"&output=embed";
-
+if(d){
+cam.src=d.img+"&t="+Date.now();
 }
 
 });
 
 
-// FRONT CAMERA FIX
-firebase.database().ref("devices/"+id+"/camera/front")
-.on("value",snap=>{
+// MAP
+firebase.database().ref("devices/"+deviceId+"/location")
+.on("value",s=>{
 
-let d=snap.val();
+let d=s.val();
 
 if(d){
 
-document.getElementById("frontCam").src=
-d.img+"&t="+new Date().getTime();
+map.src="https://maps.google.com/maps?q="
++d.lat+","+d.lon+"&output=embed";
 
 }
 
 });
 
-
-// BACK CAMERA FIX
-firebase.database().ref("devices/"+id+"/camera/back")
-.on("value",snap=>{
-
-let d=snap.val();
-
-if(d){
-
-document.getElementById("backCam").src=
-d.img+"&t="+new Date().getTime();
-
-}
+});
 
 });
+
+
+
+function switchCam(mode){
+
+firebase.database().ref("devices/"+deviceId+"/command").set(mode);
 
 }
 
